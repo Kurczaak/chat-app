@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: ./api
+      target: development
+    # Mount our host dir to the docker container
+    # Mount api directory (./api) to (:) docker container (/chicken_dev/src/app)
+    # Reflect file changes from host to container
+    volumes:
+      - ./api:/chicken_dev/src/app
+      - ./chicken_dev/src/app/node_modules
+    # RUN in debug mode: npm run start:debug --> Also start your vscode debugger
+    # RUN in dev mode: npm run start:dev
+    command: npm run start:dev 
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/db
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - 3000:3000
+      - 9229:9229
+
+  postgres:
+    image: postgres:12.3-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    ports:
+      - 35000:5432
+    
+  postgres_admin:
+    image: dpage/pgadmin4:4.28
+    depends_on: 
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 5050:80
