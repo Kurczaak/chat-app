@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; // Import the ConfigModule from the appropriate package
+import { ConfigModule } from '@nestjs/config'; 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmModule } from '@nestjs/typeorm'; // Import the TypeOrmModule from the appropriate package
-
+import { TypeOrmModule } from '@nestjs/typeorm'; 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
