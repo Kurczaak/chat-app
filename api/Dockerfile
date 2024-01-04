@@ -1,6 +1,6 @@
 # Specify Node Version and Image
 # Name Image development
-FROM node:14 AS development
+FROM node:18 AS development
 
 # Set working directory inside container
 WORKDIR /chicken_dev/src/app
@@ -23,7 +23,7 @@ EXPOSE 3000
 ## PRODUCTION ##
 ################
 # Build another image named production
-FROM node:14 AS production
+FROM node:18 AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
