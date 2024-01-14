@@ -7,12 +7,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot({
+      
       type: 'postgres',
-      host: process.env.DATABASE_URL, 
+      host: 'localhost',
+      url: process.env.DATABASE_URL,
+   
+
       autoLoadEntities: true,
       synchronize: true,
-
-  
     }),
   ],
   controllers: [AppController],
