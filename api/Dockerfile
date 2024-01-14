@@ -3,7 +3,7 @@
 FROM node:18 AS development
 
 # Set working directory inside container
-WORKDIR /chicken_dev/src/app
+WORKDIR /chicken/src/app
 
 # Copy package.json and package-lock.json to the container
 COPY package*.json ./
@@ -29,9 +29,9 @@ ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
 # Set working directory inside container
-WORKDIR /chicken_prod/src/app
+WORKDIR /chicken/src/app
 
-COPY --from=development /chicken_dev/src/app/ .
+COPY --from=development /chicken/src/app/ .
 
 EXPOSE 8080
 

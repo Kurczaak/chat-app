@@ -7,11 +7,11 @@ services:
       context: ./api
       target: development
     # Mount our host dir to the docker container
-    # Mount api directory (./api) to (:) docker container (/chicken_dev/src/app)
+    # Mount api directory (./api) to (:) docker container (/chicken/src/app)
     # Reflect file changes from host to container
     volumes:
-      - ./api:/chicken_dev/src/app
-      - /chicken_dev/src/app/node_modules
+      - ./api:/chicken/src/app
+      - /chicken/src/app/node_modules
     # RUN in debug mode: npm run start:debug --> Also start your vscode debugger
     # RUN in dev mode: npm run start:dev
     command: npm run start:dev 
