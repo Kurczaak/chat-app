@@ -2,17 +2,19 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { Observable, from, map, switchMap } from 'rxjs';
+import { AuthService } from 'src/auth/service/auth.service';
 import { UserEntity } from 'src/user/model/user.entity';
 import { UserI } from 'src/user/model/user.interface';
 import { Repository } from 'typeorm';
 
-var bcrypt = require('bcryptjs');
+
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(UserEntity)
-        private readonly userRepository: Repository<UserEntity>
+        private readonly userRepository: Repository<UserEntity>,
+        private authService: AuthService,
     ){}
 
     create(newUser: UserI): Observable<UserI>{
@@ -22,7 +24,7 @@ export class UserService {
                 if(exists){
                     throw new HttpException('Email is laready in use', HttpStatus.CONFLICT);
                 }else{
-                    return this.hashPassword(newUser.password).pipe(
+                    return this.authService.hashPassword(newUser.password).pipe(
                         switchMap((passwordHash: string)=>{
                             // overwrite the user password with the hash, to store it in the db
                             newUser.password = passwordHash;
@@ -47,7 +49,7 @@ export class UserService {
                 if(!foundUser){
                     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
                 }
-                return this.comparePasswords(user.password, foundUser.password).pipe(
+                return this.authService.comparePasswords(user.password, foundUser.password).pipe(
                     map((passwordsMatch: boolean)=>{
                         if(passwordsMatch){
                             return true;
@@ -58,11 +60,6 @@ export class UserService {
                 );
             }
         ));
-    }
-
-
-    private comparePasswords(attemptPassword: string, storedPasswordHash: string): Observable<boolean>{
-      return from( Promise.resolve(bcrypt.compareSync(attemptPassword, storedPasswordHash)));
     }
 
     private findByMail(email: string): Observable<UserI>{
@@ -81,9 +78,7 @@ export class UserService {
         )
     }
 
-    private hashPassword(password: string): Observable<string>{
-        return from<string>(bcrypt.hash(password, 12));
-    }
+
 
     private findOne(id: number): Observable<UserI>{
         return from(this.userRepository.findOne({where: {id}}));
