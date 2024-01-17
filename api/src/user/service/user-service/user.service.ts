@@ -46,8 +46,7 @@ export class UserService {
     return from(paginate<UserEntity>(this.userRepository, options));
   }
 
-  // TODO refactor to get JWT
-  login(user: UserI): Observable<boolean> {
+  login(user: UserI): Observable<string> {
     return this.findByMail(user.email).pipe(
       switchMap((foundUser: UserI) => {
         if (!foundUser) {
@@ -56,9 +55,11 @@ export class UserService {
         return this.authService
           .validatePassword(user.password, foundUser.password)
           .pipe(
-            map((passwordsMatch: boolean) => {
+            switchMap((passwordsMatch: boolean) => {
               if (passwordsMatch) {
-                return true;
+                return this.findOne(foundUser.id).pipe(
+                  switchMap((user: UserI) => this.authService.generateJWT(user))
+                );
               } else {
                 throw new HttpException(
                   'Wrong password',

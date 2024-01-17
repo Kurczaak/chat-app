@@ -3,12 +3,14 @@ import { AuthController } from './controller/auth.controller';
 import { AuthService } from './service/auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtStrategy } from './strategies/jw.strategy';
+import { JwtAuthGuard } from './guards/jwt.guard';
 
 @Module({
   imports: [
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      inject: [ConfigModule],
+      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
         signOptions: {
@@ -18,6 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  exports: [AuthService],
 })
 export class AuthModule {}
