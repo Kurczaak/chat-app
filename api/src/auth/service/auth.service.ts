@@ -12,7 +12,7 @@ export class AuthService {
     return from(this.jwtService.signAsync({ user }));
   }
 
-  comparePasswords(
+  validatePassword(
     attemptPassword: string,
     storedPasswordHash: string
   ): Observable<boolean> {
