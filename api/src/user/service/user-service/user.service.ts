@@ -20,21 +20,35 @@ export class UserService {
   ) {}
 
   create(newUser: UserI): Observable<UserI> {
-    return this.mailExists(newUser.email).pipe(
+    const mailExists = this.mailExists(newUser.email);
+    const usernameExists = this.usernameExists(newUser.username);
+
+    return this.usernameExists(newUser.username).pipe(
       switchMap((exists: boolean) => {
         if (exists) {
           throw new HttpException(
-            'Email is laready in use',
+            'Username is laready in use',
             HttpStatus.CONFLICT
           );
         } else {
-          return this.authService.hashPassword(newUser.password).pipe(
-            switchMap((passwordHash: string) => {
-              // overwrite the user password with the hash, to store it in the db
-              newUser.password = passwordHash;
-              return from(this.userRepository.save(newUser)).pipe(
-                switchMap((user: UserI) => this.findOne(user.id))
-              );
+          return this.mailExists(newUser.email).pipe(
+            switchMap((exists: boolean) => {
+              if (exists) {
+                throw new HttpException(
+                  'Email is laready in use',
+                  HttpStatus.CONFLICT
+                );
+              } else {
+                return this.authService.hashPassword(newUser.password).pipe(
+                  switchMap((passwordHash: string) => {
+                    // overwrite the user password with the hash, to store it in the db
+                    newUser.password = passwordHash;
+                    return from(this.userRepository.save(newUser)).pipe(
+                      switchMap((user: UserI) => this.findOne(user.id))
+                    );
+                  })
+                );
+              }
             })
           );
         }
@@ -83,6 +97,18 @@ export class UserService {
 
   private mailExists(email: string): Observable<boolean> {
     return from(this.userRepository.findOne({ where: { email } })).pipe(
+      map((user: UserI) => {
+        if (user) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+    );
+  }
+
+  private usernameExists(username: string): Observable<boolean> {
+    return from(this.userRepository.findOne({ where: { username } })).pipe(
       map((user: UserI) => {
         if (user) {
           return true;
