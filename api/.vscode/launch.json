@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Debug: Nest.js Real Time Chat",
+      "port": 9229,
+      "remoteRoot": "/chicken/src/app",
+      "localRoot": "${workspaceFolder}",
+      "restart": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    }
+  ]
+}
