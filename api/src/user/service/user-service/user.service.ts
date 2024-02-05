@@ -86,6 +86,10 @@ export class UserService {
     );
   }
 
+  public getOne(id: number): Promise<UserI> {
+    return this.userRepository.findOneByOrFail({ id: id });
+  }
+
   private findByMail(email: string): Observable<UserI> {
     return from(
       this.userRepository.findOne({
@@ -96,7 +100,7 @@ export class UserService {
   }
 
   private mailExists(email: string): Observable<boolean> {
-    return from(this.userRepository.findOne({ where: { email } })).pipe(
+    return from(this.userRepository.findOneBy({ email: email })).pipe(
       map((user: UserI) => {
         if (user) {
           return true;
@@ -108,7 +112,7 @@ export class UserService {
   }
 
   private usernameExists(username: string): Observable<boolean> {
-    return from(this.userRepository.findOne({ where: { username } })).pipe(
+    return from(this.userRepository.findOneBy({ username: username })).pipe(
       map((user: UserI) => {
         if (user) {
           return true;
@@ -120,6 +124,8 @@ export class UserService {
   }
 
   private findOne(id: number): Observable<UserI> {
-    return from(this.userRepository.findOne({ where: { id } }));
+    return from(this.userRepository.findOneBy({ id: id }));
   }
+
+  
 }

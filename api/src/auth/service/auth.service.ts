@@ -24,4 +24,8 @@ export class AuthService {
   hashPassword(password: string): Observable<string> {
     return from<string>(bcrypt.hash(password, 12));
   }
+
+  verifyJwt(jwt: string): Promise<any> {
+    return this.jwtService.verifyAsync(jwt);
+  }
 }
