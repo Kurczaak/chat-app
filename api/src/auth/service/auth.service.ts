@@ -11,7 +11,7 @@ export class AuthService {
     return this.jwtService.signAsync({ user });
   }
 
-  async validatePassword(
+  async comparePasswords(
     attemptPassword: string,
     storedPasswordHash: string
   ): Promise<boolean> {
