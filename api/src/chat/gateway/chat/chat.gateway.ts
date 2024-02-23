@@ -9,6 +9,9 @@ import {
 import { log } from 'console';
 import { Socket, Server } from 'socket.io';
 import { AuthService } from 'src/auth/service/auth.service';
+import { PageI } from 'src/chat/model/page.interface';
+import { RoomI } from 'src/chat/model/room.interface';
+import { RoomService } from 'src/chat/service/room-service/room/room.service';
 import { UserI } from 'src/user/model/user.interface';
 import { UserService } from 'src/user/service/user-service/user.service';
 
@@ -20,12 +23,11 @@ import { UserService } from 'src/user/service/user-service/user.service';
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    private roomService: RoomService
   ) {}
 
   @WebSocketServer() server: Server;
-
-  title: string[] = [];
 
   handleDisconnect(socket: Socket) {
     socket.disconnect();
@@ -40,8 +42,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!user) {
         return this.disconnect(socket);
       } else {
-        this.title.push('Value ' + Math.random().toString());
-        this.server.emit('message', this.title);
+        socket.data.user = user;
+        const rooms = await this.roomService.getRoomsForUser(user.id, {
+          page: 1,
+          limit: 10,
+        });
+
+        // Only emit rooms to the specific connected client
+        return this.server.to(socket.id).emit('rooms', rooms);
       }
     } catch (e) {
       log(e);
@@ -49,9 +57,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('createRoom')
+  async onCreateRoom(socket: Socket, room: RoomI): Promise<RoomI> {
+    return this.roomService.createRoom(room, socket.data.user);
+  }
+
   @SubscribeMessage('message')
   handleMessage(client: any, payload: any) {
     this.server.emit('message', 'test');
+  }
+
+  @SubscribeMessage('paginateRoom')
+  async onPaginateRoom(socket: Socket, page: PageI) {
+    page.limit = page.limit > 100 ? 100 : page.limit;
+    const rooms = await this.roomService.getRoomsForUser(
+      socket.data.user.id,
+      page
+    );
+    return this.server.to(socket.id).emit('rooms', rooms);
   }
 
   private disconnect(socket: Socket) {
