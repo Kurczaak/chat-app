@@ -6,19 +6,20 @@ import { UserI } from 'src/user/model/user.interface';
 
 @Injectable()
 export class UserHelperService {
-    createUserDtoToUserEntity(createUserDto: CreateUserDto): Observable<UserI>{
-        return of({
-            username: createUserDto.username,
-            email: createUserDto.email,
-            password: createUserDto.password
-        })
-    }
+  async createUserDtoToUserEntity(
+    createUserDto: CreateUserDto
+  ): Promise<UserI> {
+    return {
+      username: createUserDto.username,
+      email: createUserDto.email,
+      password: createUserDto.password,
+    };
+  }
 
-    loginUserDtoToEntity(loginUserDto: LoginUserDto): Observable<UserI>{
-    return of({
-        email: loginUserDto.email,
-        password: loginUserDto.password,
-    })
-    }
-
+  async loginUserDtoToEntity(loginUserDto: LoginUserDto): Promise<UserI> {
+    return {
+      email: loginUserDto.email,
+      password: loginUserDto.password,
+    };
+  }
 }
