@@ -67,7 +67,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('message', 'test');
   }
 
-  @SubscribeMessage('paginateRoom')
+  @SubscribeMessage('paginateRooms')
   async onPaginateRoom(socket: Socket, page: PageI) {
     page.limit = page.limit > 100 ? 100 : page.limit;
     const rooms = await this.roomService.getRoomsForUser(
