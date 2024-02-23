@@ -5,7 +5,6 @@ import {
   Pagination,
   paginate,
 } from 'nestjs-typeorm-paginate';
-import { Observable, from, map, switchMap } from 'rxjs';
 import { AuthService } from 'src/auth/service/auth.service';
 import { UserEntity } from 'src/user/model/user.entity';
 import { UserI } from 'src/user/model/user.interface';
@@ -19,113 +18,102 @@ export class UserService {
     private authService: AuthService
   ) {}
 
-  create(newUser: UserI): Observable<UserI> {
-    const mailExists = this.mailExists(newUser.email);
-    const usernameExists = this.usernameExists(newUser.username);
-
-    return this.usernameExists(newUser.username).pipe(
-      switchMap((exists: boolean) => {
-        if (exists) {
-          throw new HttpException(
-            'Username is laready in use',
-            HttpStatus.CONFLICT
-          );
-        } else {
-          return this.mailExists(newUser.email).pipe(
-            switchMap((exists: boolean) => {
-              if (exists) {
-                throw new HttpException(
-                  'Email is laready in use',
-                  HttpStatus.CONFLICT
-                );
-              } else {
-                return this.authService.hashPassword(newUser.password).pipe(
-                  switchMap((passwordHash: string) => {
-                    // overwrite the user password with the hash, to store it in the db
-                    newUser.password = passwordHash;
-                    return from(this.userRepository.save(newUser)).pipe(
-                      switchMap((user: UserI) => this.findOne(user.id))
-                    );
-                  })
-                );
-              }
-            })
-          );
-        }
-      })
-    );
+  async create(newUser: UserI): Promise<UserI> {
+    try {
+      const mailExists: boolean = await this.mailExists(newUser.email);
+      const usernameExists: boolean = await this.usernameExists(
+        newUser.username
+      );
+      if (mailExists) {
+        throw new HttpException('Email is already in use', HttpStatus.CONFLICT);
+      }
+      if (usernameExists) {
+        throw new HttpException(
+          'Username is already in use',
+          HttpStatus.CONFLICT
+        );
+      }
+      const passwordHash: string = await this.hashPassword(newUser.password);
+      const user = await this.userRepository.save(
+        this.userRepository.create(newUser)
+      );
+      return this.findOne(user.id);
+    } catch (e) {
+      throw new HttpException(
+        'Email or username is already in use',
+        HttpStatus.CONFLICT
+      );
+    }
   }
 
-  findAll(options: IPaginationOptions): Observable<Pagination<UserI>> {
-    return from(paginate<UserEntity>(this.userRepository, options));
+  async findAll(options: IPaginationOptions): Promise<Pagination<UserI>> {
+    return paginate<UserEntity>(this.userRepository, options);
   }
 
-  login(user: UserI): Observable<string> {
-    return this.findByMail(user.email).pipe(
-      switchMap((foundUser: UserI) => {
-        if (!foundUser) {
-          throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        }
-        return this.authService
-          .validatePassword(user.password, foundUser.password)
-          .pipe(
-            switchMap((passwordsMatch: boolean) => {
-              if (passwordsMatch) {
-                return this.findOne(foundUser.id).pipe(
-                  switchMap((user: UserI) => this.authService.generateJWT(user))
-                );
-              } else {
-                throw new HttpException(
-                  'Wrong password',
-                  HttpStatus.UNAUTHORIZED
-                );
-              }
-            })
-          );
-      })
-    );
+  async login(user: UserI): Promise<string> {
+    try {
+      const foundUser = await this.findByMail(user.email.toLocaleLowerCase());
+      if (!foundUser) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      const passwordsMatch = await this.validatePassword(
+        user.password,
+        foundUser.password
+      );
+      if (!passwordsMatch) {
+        throw new HttpException('Wrong password', HttpStatus.UNAUTHORIZED);
+      }
+
+      const payload = await this.getOne(foundUser.id);
+      return this.authService.generateJWT(payload);
+    } catch (e) {
+      throw new HttpException(
+        'Wrong login or password',
+        HttpStatus.UNAUTHORIZED
+      );
+    }
   }
 
-  public getOne(id: number): Promise<UserI> {
+  public async getOne(id: number): Promise<UserI> {
     return this.userRepository.findOneByOrFail({ id: id });
   }
 
-  private findByMail(email: string): Observable<UserI> {
-    return from(
-      this.userRepository.findOne({
-        where: { email },
-        select: ['id', 'username', 'password', 'email'],
-      })
-    );
+  private async findByMail(email: string): Promise<UserI> {
+    return this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'username', 'password', 'email'],
+    });
   }
 
-  private mailExists(email: string): Observable<boolean> {
-    return from(this.userRepository.findOneBy({ email: email })).pipe(
-      map((user: UserI) => {
+  private async mailExists(email: string): Promise<boolean> {
+    const user = this.findByMail(email);
+    if (user) {
+      return true;
+    }
+    return false;
+  }
+
+  private async usernameExists(username: string): Promise<boolean> {
+    return this.userRepository
+      .findOneBy({ username: username })
+      .then((user: UserI) => {
         if (user) {
           return true;
         } else {
           return false;
         }
-      })
-    );
+      });
   }
 
-  private usernameExists(username: string): Observable<boolean> {
-    return from(this.userRepository.findOneBy({ username: username })).pipe(
-      map((user: UserI) => {
-        if (user) {
-          return true;
-        } else {
-          return false;
-        }
-      })
-    );
+  private async findOne(id: number): Promise<UserI> {
+    return this.userRepository.findOneBy({ id: id });
   }
 
-  private findOne(id: number): Observable<UserI> {
-    return from(this.userRepository.findOneBy({ id: id }));
+  private async validatePassword(password: string, storedPasswordHash: string) {
+    return this.authService.comparePasswords(password, storedPasswordHash);
   }
 
-  
+  private async hashPassword(password: string): Promise<string> {
+    return this.authService.hashPassword(password);
+  }
 }
