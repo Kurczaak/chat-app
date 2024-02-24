@@ -1,6 +1,7 @@
 import { RoomEntity } from 'src/chat/model/room.entity';
 import {
   BeforeInsert,
+  BeforeUpdate,
   Column,
   ManyToMany,
   PrimaryGeneratedColumn,
@@ -29,7 +30,9 @@ export class UserEntity {
   rooms: RoomEntity[];
 
   @BeforeInsert()
+  @BeforeUpdate()
   emailToLoweCase() {
     this.email = this.email.toLowerCase();
+    this.username = this.username.toLowerCase();
   }
 }
