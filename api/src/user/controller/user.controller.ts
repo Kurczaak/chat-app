@@ -36,6 +36,13 @@ export class UserController {
     });
   }
 
+  @Get('/find-by-username')
+  async findAllByUsername(
+    @Query('username') username: string
+  ): Promise<UserI[]> {
+    return this.userService.findAllByUsername(username);
+  }
+
   @Post('login')
   async login(@Body() user: LoginUserDto): Promise<LoginResponseI> {
     const userEntity = await this.userHelperService.loginUserDtoToEntity(user);

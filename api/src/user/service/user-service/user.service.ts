@@ -8,7 +8,7 @@ import {
 import { AuthService } from 'src/auth/service/auth.service';
 import { UserEntity } from 'src/user/model/user.entity';
 import { UserI } from 'src/user/model/user.interface';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class UserService {
@@ -72,6 +72,14 @@ export class UserService {
         HttpStatus.UNAUTHORIZED
       );
     }
+  }
+
+  async findAllByUsername(username: string): Promise<UserI[]> {
+    return this.userRepository.find({
+      where: {
+        username: Like(`%${username}%`),
+      },
+    });
   }
 
   public async getOne(id: number): Promise<UserI> {
