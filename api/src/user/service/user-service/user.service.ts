@@ -34,6 +34,7 @@ export class UserService {
         );
       }
       const passwordHash: string = await this.hashPassword(newUser.password);
+      newUser.password = passwordHash;
       const user = await this.userRepository.save(
         this.userRepository.create(newUser)
       );
@@ -94,7 +95,7 @@ export class UserService {
   }
 
   private async mailExists(email: string): Promise<boolean> {
-    const user = this.findByMail(email);
+    const user = await this.findByMail(email);
     if (user) {
       return true;
     }
