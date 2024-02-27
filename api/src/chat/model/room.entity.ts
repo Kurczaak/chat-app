@@ -24,8 +24,8 @@ export class RoomEntity {
   users: UserEntity[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @CreateDateColumn()
-  updatedAt: Date;
+  updated_at: Date;
 }
