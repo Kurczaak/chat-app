@@ -25,7 +25,7 @@ export class AuthMiddleware implements NestMiddleware {
       const tokenArray: string[] = req.headers.authorization.split(' ');
       // make sure that the user is not deleted, or that props or right changed compared to the time when the jwt was issued
       const decodedToken = await this.authService.verifyJwt(tokenArray[1]);
-      const user: UserI = await this.userService.getOne(decodedToken.id);
+      const user: UserI = await this.userService.getOne(decodedToken.user.id);
       if (user) {
         // add the user to the req object, so that we can acccess it later when we need it
         // if it would be here, we would overwrite it
