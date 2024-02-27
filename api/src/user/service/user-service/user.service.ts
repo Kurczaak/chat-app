@@ -76,11 +76,15 @@ export class UserService {
   }
 
   async findAllByUsername(username: string): Promise<UserI[]> {
-    return this.userRepository.find({
-      where: {
-        username: Like(`%${username}%`),
-      },
-    });
+    try {
+      return this.userRepository.find({
+        where: {
+          username: Like(`%${username}%`),
+        },
+      });
+    } catch (e) {
+      return [];
+    }
   }
 
   public async getOne(id: number): Promise<UserI> {
