@@ -8,21 +8,21 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   async generateJWT(user: UserI): Promise<string> {
-    return this.jwtService.signAsync({ user });
+    return await this.jwtService.signAsync({ user });
   }
 
   async comparePasswords(
     attemptPassword: string,
     storedPasswordHash: string
   ): Promise<boolean> {
-    return bcrypt.compareSync(attemptPassword, storedPasswordHash);
+    return await bcrypt.compareSync(attemptPassword, storedPasswordHash);
   }
 
-  hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 12);
+  async hashPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, 12);
   }
 
-  verifyJwt(jwt: string): Promise<any> {
-    return this.jwtService.verifyAsync(jwt);
+  async verifyJwt(jwt: string): Promise<any> {
+    return await this.jwtService.verifyAsync(jwt);
   }
 }
