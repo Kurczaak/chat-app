@@ -11,7 +11,7 @@ import { Socket, Server } from 'socket.io';
 import { AuthService } from 'src/auth/service/auth.service';
 import { PageI } from 'src/chat/model/page.interface';
 import { RoomI } from 'src/chat/model/room.interface';
-import { RoomService } from 'src/chat/service/room-service/room/room.service';
+import { RoomService } from 'src/chat/service/room-service/room.service';
 import { UserI } from 'src/user/model/user.interface';
 import { UserService } from 'src/user/service/user-service/user.service';
 
