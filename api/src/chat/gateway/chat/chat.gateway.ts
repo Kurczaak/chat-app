@@ -9,8 +9,10 @@ import {
 import { log } from 'console';
 import { Socket, Server } from 'socket.io';
 import { AuthService } from 'src/auth/service/auth.service';
+import { ConnectedUserI } from 'src/chat/model/connected-user.interface';
 import { PageI } from 'src/chat/model/page.interface';
 import { RoomI } from 'src/chat/model/room.interface';
+import { ConnectedUserService } from 'src/chat/service/connected-user/connected-user.service';
 import { RoomService } from 'src/chat/service/room-service/room.service';
 import { UserI } from 'src/user/model/user.interface';
 import { UserService } from 'src/user/service/user-service/user.service';
@@ -24,12 +26,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private authService: AuthService,
     private userService: UserService,
-    private roomService: RoomService
+    private roomService: RoomService,
+    private connectedUserService: ConnectedUserService
   ) {}
 
   @WebSocketServer() server: Server;
 
-  handleDisconnect(socket: Socket) {
+  async handleDisconnect(socket: Socket) {
+    await this.connectedUserService.deleteBySocketId(socket.id);
     socket.disconnect();
   }
 
@@ -47,6 +51,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           page: 1,
           limit: 10,
         });
+        // Save connection to DB
+        await this.connectedUserService.create({ socketId: socket.id, user });
 
         // Only emit rooms to the specific connected client
         return this.server.to(socket.id).emit('rooms', rooms);
@@ -58,8 +64,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('createRoom')
-  async onCreateRoom(socket: Socket, room: RoomI): Promise<RoomI> {
-    return this.roomService.createRoom(room, socket.data.user);
+  async onCreateRoom(socket: Socket, room: RoomI) {
+    console.log('KURWAAA');
+    const createdRoom: RoomI = await this.roomService.createRoom(
+      room,
+      socket.data.user
+    );
+    for (const user of createdRoom.users) {
+      const connections: ConnectedUserI[] =
+        await this.connectedUserService.findByUser(user);
+      const rooms = await this.roomService.getRoomsForUser(user.id, {
+        page: 1,
+        limit: 10,
+      });
+      for (const connection of connections) {
+        this.server.to(connection.socketId).emit('rooms', rooms);
+      }
+    }
   }
 
   @SubscribeMessage('message')
@@ -77,7 +98,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return this.server.to(socket.id).emit('rooms', rooms);
   }
 
-  private disconnect(socket: Socket) {
+  private async disconnect(socket: Socket) {
     socket.emit('Error', new UnauthorizedException());
     socket.disconnect();
   }
