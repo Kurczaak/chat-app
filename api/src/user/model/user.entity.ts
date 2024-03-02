@@ -1,9 +1,11 @@
+import { ConnectedUserEntity } from 'src/chat/model/connected-user.entity';
 import { RoomEntity } from 'src/chat/model/room.entity';
 import {
   BeforeInsert,
   BeforeUpdate,
   Column,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Entity } from 'typeorm/decorator/entity/Entity';
@@ -28,6 +30,9 @@ export class UserEntity {
 
   @ManyToMany(() => RoomEntity, (room) => room.users)
   rooms: RoomEntity[];
+
+  @OneToMany(() => ConnectedUserEntity, (connection) => connection.user)
+  connections: ConnectedUserEntity;
 
   @BeforeInsert()
   @BeforeUpdate()
