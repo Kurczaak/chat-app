@@ -5,8 +5,8 @@ import {
   Pagination,
   paginate,
 } from 'nestjs-typeorm-paginate';
-import { RoomEntity } from 'src/chat/model/room.entity';
-import { RoomI } from 'src/chat/model/room.interface';
+import { RoomEntity } from 'src/chat/model/room/room.entity';
+import { RoomI } from 'src/chat/model/room/room.interface';
 import { UserI } from 'src/user/model/user.interface';
 import { Repository } from 'typeorm';
 
