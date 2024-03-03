@@ -7,12 +7,17 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { log } from 'console';
+import { create } from 'domain';
 import { Socket, Server } from 'socket.io';
 import { AuthService } from 'src/auth/service/auth.service';
 import { ConnectedUserI } from 'src/chat/model/connected-user/connected-user.interface';
+import { JoinedRoomI } from 'src/chat/model/joined-room/joined-room.interface';
+import { MessageI } from 'src/chat/model/message/message.interface';
 import { PageI } from 'src/chat/model/page.interface';
 import { RoomI } from 'src/chat/model/room/room.interface';
 import { ConnectedUserService } from 'src/chat/service/connected-user/connected-user.service';
+import { JoinedRoomService } from 'src/chat/service/joined-room/joined-room.service';
+import { MessageService } from 'src/chat/service/message/message.service';
 import { RoomService } from 'src/chat/service/room-service/room.service';
 import { UserI } from 'src/user/model/user.interface';
 import { UserService } from 'src/user/service/user-service/user.service';
@@ -29,11 +34,14 @@ export class ChatGateway
     private authService: AuthService,
     private userService: UserService,
     private roomService: RoomService,
-    private connectedUserService: ConnectedUserService
+    private connectedUserService: ConnectedUserService,
+    private joinedRoomService: JoinedRoomService,
+    private messageService: MessageService
   ) {}
 
   async onModuleInit() {
     await this.connectedUserService.deleteAll();
+    await this.joinedRoomService.deleteAll();
   }
 
   @WebSocketServer() server: Server;
@@ -82,6 +90,7 @@ export class ChatGateway
         page: 1,
         limit: 10,
       });
+
       for (const connection of connections) {
         this.server.to(connection.socketId).emit('rooms', rooms);
       }
@@ -101,6 +110,42 @@ export class ChatGateway
       page
     );
     return this.server.to(socket.id).emit('rooms', rooms);
+  }
+
+  @SubscribeMessage('joinRoom')
+  async onJoinRoom(socket: Socket, room: RoomI) {
+    const messages = await this.messageService.findMessagesForRoom(room, {
+      limit: 20,
+      page: 1,
+    });
+
+    // Save connection to room
+    await this.joinedRoomService.create({
+      socketId: socket.id,
+      user: socket.data.user,
+      room,
+    });
+    // Send last messages from Room to User
+    this.server.to(socket.id).emit('messages', messages);
+  }
+
+  @SubscribeMessage('leaveRoom')
+  async onLeaveRoom(socket: Socket, room: RoomI) {
+    // Remove connection from JoinedRooms
+    await this.joinedRoomService.deleteBySocketId(socket.id);
+    socket.emit('leaveRoom', 'You have left the room');
+  }
+
+  @SubscribeMessage('addMessage')
+  async onAddMessage(socket: Socket, message: MessageI) {
+    const createdMessage: MessageI = await this.messageService.create({
+      ...message,
+      user: socket.data.user,
+    });
+    const room: RoomI = await this.roomService.getRoom(createdMessage.room.id);
+    const joinedUsers: JoinedRoomI[] =
+      await this.joinedRoomService.findByRoom(room);
+    // TODO: Send new Message to all joined users of the room (currently online)
   }
 
   private async disconnect(socket: Socket) {

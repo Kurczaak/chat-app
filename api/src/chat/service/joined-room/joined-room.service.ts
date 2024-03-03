@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { JoinedRoomEntity } from 'src/chat/model/joined-room/joined-room.entity';
 import { JoinedRoomI } from 'src/chat/model/joined-room/joined-room.interface';
 import { RoomEntity } from 'src/chat/model/room/room.entity';
+import { RoomI } from 'src/chat/model/room/room.interface';
 import { UserI } from 'src/user/model/user.interface';
 import { Repository } from 'typeorm';
 
@@ -21,7 +22,7 @@ export class JoinedRoomService {
     return this.joinedRoomRepository.findBy({ user });
   }
 
-  async findByRoom(room: RoomEntity): Promise<JoinedRoomI[]> {
+  async findByRoom(room: RoomI): Promise<JoinedRoomI[]> {
     return this.joinedRoomRepository.findBy({ room });
   }
 
