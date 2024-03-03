@@ -21,8 +21,7 @@ export class RoomService {
     const newRoom = await this.addCreatorToRoom(room, creator);
     newRoom.created_at = new Date();
     newRoom.updated_at = new Date();
-    const createdRoom = await this.roomRepository.save(newRoom);
-    return createdRoom;
+    return await this.roomRepository.save(newRoom);
   }
 
   async getRoomsForUser(
