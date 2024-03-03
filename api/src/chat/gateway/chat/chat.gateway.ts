@@ -9,7 +9,7 @@ import {
 import { log } from 'console';
 import { Socket, Server } from 'socket.io';
 import { AuthService } from 'src/auth/service/auth.service';
-import { ConnectedUserI } from 'src/chat/model/connected-user.interface';
+import { ConnectedUserI } from 'src/chat/model/connected-user/connected-user.interface';
 import { PageI } from 'src/chat/model/page.interface';
 import { RoomI } from 'src/chat/model/room.interface';
 import { ConnectedUserService } from 'src/chat/service/connected-user/connected-user.service';

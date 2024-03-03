@@ -1,4 +1,4 @@
-import { ConnectedUserEntity } from 'src/chat/model/connected-user.entity';
+import { ConnectedUserEntity } from 'src/chat/model/connected-user/connected-user.entity';
 import { RoomEntity } from 'src/chat/model/room.entity';
 import {
   BeforeInsert,

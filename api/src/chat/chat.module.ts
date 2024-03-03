@@ -6,7 +6,7 @@ import { RoomService } from './service/room-service/room.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RoomEntity } from './model/room.entity';
 import { ConnectedUserService } from './service/connected-user/connected-user.service';
-import { ConnectedUserEntity } from './model/connected-user.entity';
+import { ConnectedUserEntity } from './model/connected-user/connected-user.entity';
 
 @Module({
   imports: [
