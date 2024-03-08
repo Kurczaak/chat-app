@@ -125,6 +125,7 @@ export class ChatGateway
       user: socket.data.user,
       room,
     });
+    this.server.to(socket.id).emit('joinRoom', 'You have joined the room');
     // Send last messages from Room to User
     this.server.to(socket.id).emit('messages', messages);
   }
@@ -141,11 +142,18 @@ export class ChatGateway
     const createdMessage: MessageI = await this.messageService.create({
       ...message,
       user: socket.data.user,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
     const room: RoomI = await this.roomService.getRoom(createdMessage.room.id);
     const joinedUsers: JoinedRoomI[] =
       await this.joinedRoomService.findByRoom(room);
     // TODO: Send new Message to all joined users of the room (currently online)
+    for (const joinedUser of joinedUsers) {
+      this.server
+        .to(joinedUser.socketId)
+        .emit('messages', { items: [createdMessage] });
+    }
   }
 
   private async disconnect(socket: Socket) {
