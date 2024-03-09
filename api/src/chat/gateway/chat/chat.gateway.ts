@@ -95,6 +95,7 @@ export class ChatGateway
         this.server.to(connection.socketId).emit('rooms', rooms);
       }
     }
+    return 'Room created successfully';
   }
 
   @SubscribeMessage('message')
@@ -125,7 +126,6 @@ export class ChatGateway
       user: socket.data.user,
       room,
     });
-    this.server.to(socket.id).emit('joinRoom', 'You have joined the room');
     // Send last messages from Room to User
     this.server.to(socket.id).emit('messages', messages);
   }
